@@ -162,6 +162,7 @@ def chat():
             based on the adversary response {past_red_action} 
             Take this into account when constructing your plan
             The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            Keep your response to five actions or less, and make sure these actions represent the most impactful of the possible choices
             Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
             Example output:
             action 1, action 2, action 3
@@ -176,6 +177,7 @@ def chat():
             {coa_options}
 
             The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            Keep your response to five actions or less, and make sure these actions represent the most impactful of the possible choices
             Example output:
             Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
             action 1, action 2, action 3
