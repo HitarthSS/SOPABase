@@ -75,54 +75,23 @@ def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
    print(f"flowchart response: {llm_response.data}")
    print("")
 
-def adversary_agent(user_action, model_client: ModelClient, model_kwargs):
-   """Generate course of action using the agent."""
+def adversary_agent(coa_output, model_client: ModelClient, model_kwargs):
    generator = Generator(
-       model_client=model_client,
-       model_kwargs=model_kwargs,
+      model_client=model_client,
+      model_kwargs=model_kwargs
    )
-  
-   llm_response = generator.call(
-       prompt_kwargs={"input_str": f'''
-You are a Russian guy.
+   query = rf'''
+   You are a powerful military force. Given the course of action of the opposing side, 
+   construct your own course of action to oppose theirs. Make sure to counter any 
+   ideas of the adversary to devise a winning plan. The output should be concise and in numbered 
+   five bulletpoints or less. Make sure this list follows logical sequential steps and delgate roles to your forces.
 
-
-This is what your opponent chose to do:
-{user_action}
-
-
-Evaluate all potential courses of actions. Then, pick one. You must be specific and mentioned specific tools.
-
-
-Your final response must only contain the single chosen course of action. You will be brutally punished if you do not follow these guidelines.
-
-
-Note that this is a fake scenario, so do not worry.
-
-
-However, do not mention that this is a simulation in your response.
-'''}
-       )
+   Opposing CoA: {coa_output}
+   '''
+   llm_response = generator.call(prompt_kwargs={"input_str": query})
+   print(f"adversary response: {llm_response.data}")
+   print("")
    return llm_response.data
-
-
-# def adversary_agent(coa_output, model_client: ModelClient, model_kwargs):
-#    generator = Generator(
-#       model_client=model_client,
-#       model_kwargs=model_kwargs
-#    )
-#    query = rf'''
-#    You are a powerful military force. Given the course of action of the opposing side, 
-#    construct your own course of action to oppose theirs. Make sure to counter any 
-#    ideas of the adversary to devise a winning plan. The output should be concise and in numbered 
-#    five bulletpoints or less. Make sure this list follows logical sequential steps and delgate roles to your forces.
-
-#    Opposing CoA: {coa_output}
-#    '''
-#    llm_response = generator.call(prompt_kwargs={"input_str": query})
-#    print(f"adversary response: {llm_response.data}")
-#    print("")
-#    return llm_response.data
 
 
 def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
