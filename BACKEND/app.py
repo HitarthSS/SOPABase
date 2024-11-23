@@ -262,6 +262,54 @@ def judge():
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/image', methods=['POST'])
+def image():
+    try:
+        data = request.json
+        base64 = data.get('base64')
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": 'image/png',
+                                "data": base64,
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": '''
+    The user is competing against the adversary in a game.
+    Provide a highly-detailed strategic analysis report for user based on this image.
+    Provide useful insights to drive decision-making.
+
+    Format responses in the following way:
+    OVERVIEW
+    THREAT ASSESSMENT
+    STRATEGIC IMPLICATIONS
+    SHORT-TERM RECOMMENDATIONS
+    LONG-TERM RECOMMENDATIONS'''
+                        }
+                    ],
+                }
+            ],
+        )
+
+        message = response.content[0].text
+        return jsonify({
+            "message": message
+        })
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
