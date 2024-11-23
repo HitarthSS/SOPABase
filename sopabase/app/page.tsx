@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import MapboxGlobe from '@/components/MapBox';
 
 // Add a message counter for unique IDs
 let messageIdCounter = 0;
@@ -310,8 +311,8 @@ export default function ChatInterface() {
   return (
     <div className="flex min-h-screen bg-gray-50 p-4">
       <div className="w-2/3 h-[90vh] bg-gray-100 p-4">
-        <h2 className="text-lg font-semibold mb-4">Display Area</h2>
-        <p className="text-gray-700">This is the area for additional display content, such as information, stats, or other elements.</p>
+        <h2 className="text-lg font-semibold mb-4">Satellite View</h2>
+        <MapboxGlobe />
       </div>
       <Card className="w-full max-w-4xl mx-auto h-[90vh] flex flex-col">
         <CardContent className="flex flex-col h-full p-6">
