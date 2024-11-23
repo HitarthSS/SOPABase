@@ -53,7 +53,7 @@ export default function ChatInterface() {
 
 
   const callCOAAgent = async (query: string, lastVerdict: string | null, lastEnemyAction: string | null) => {
-    const response = await fetch('http://localhost:5000/api/chat', {
+    const response = await fetch('http://127.0.0.1:5000/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -66,7 +66,7 @@ export default function ChatInterface() {
   };
   
   const callAdversaryAgent = async (userAction: string, message: string) => {
-    const response = await fetch('http://localhost:5000/api/adversary', {
+    const response = await fetch('http://127.0.0.1:5000/api/adversary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -78,7 +78,7 @@ export default function ChatInterface() {
   };
   
   const callJudgeAgent = async (userAction: string, adversaryAction: string) => {
-    const response = await fetch('http://localhost:5000/api/judge', {
+    const response = await fetch('http://127.0.0.1:5000/api/judge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
