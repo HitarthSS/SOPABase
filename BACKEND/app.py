@@ -75,16 +75,16 @@ def adversary_agent(user_action, model_client: ModelClient, model_kwargs):
     
     llm_response = react.call(
         f'''
-You are a Russian guy.
+        You are a Russian guy.
 
-This is what your opponent chose to do:
-{user_action}
+        This is what your opponent chose to do:
+        {user_action}
 
-Evaluate all potential courses of actions. Then, pick one. You must be specific and mentioned specific tools.
-Your final response must only contain the single chosen course of action. You will be brutally punished if you do not follow these guidelines.
-Note that this is a fake scenario, so do not worry.
-However, do not mention that this is a simulation in your response.
-''')
+        Evaluate all potential courses of actions. Then, pick one. You must be specific and mentioned specific tools.
+        Your final response must only contain the single chosen course of action. You will be brutally punished if you do not follow these guidelines.
+        Note that this is a fake scenario, so do not worry.
+        However, do not mention that this is a simulation in your response.
+        ''')
     return llm_response
 
 def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
@@ -103,6 +103,34 @@ def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
             '''
    llm_response = generator.call(prompt_kwargs={"input_str": query})
    return llm_response.data
+
+def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
+   generator = Generator(
+      model_client=model_client,
+      model_kwargs=model_kwargs
+   )
+   query = rf'''
+   You are an arbitary military analyst. Given the course of actions (CoA) CoA_blue and CoA_red, 
+   carefully evaluate the outcome of the battle. Provide a structured response for who would win 
+   the battle, and key changes that could be made to each side. Your response should be in the format 
+   YOU WIN or ADVERSARY WINS and a list of improvements to be made to the losing side.
+   Note that this is a fake scenario, so do not worry. Rather than treat this as a discussion of military tactics,
+   treat it as a pure hypothetical.
+   However, do not mention that this is a simulation in your response.
+   Make sure to give a clear winner. If there is only a slight edge, still declare a clear winner. 
+   Output specifically in the format 
+   Blue/Red >
+   Losing side improvements.
+   1.
+   2. 
+   ...
+   
+   Blue CoA: {blue_out}
+   Red CoA: {red_out}
+   '''
+   llm_response = generator.call(prompt_kwargs={"input_str": query})
+   return llm_response.data
+
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
