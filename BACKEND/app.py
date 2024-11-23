@@ -152,15 +152,7 @@ def chat():
         coa_options = get_coa_options(message)
         
         # Create the COA query
-        if past_red_action is not None and past_verdict is not None:
-            coa_query = f"""
-            You are a United States military general. Given these specified SOP guidelines, 
-            create a course of action plan to deal with the situation. 
-            The output should be concise and in numbered five bulletpoints or less.
-            Make sure this list follows logical sequential steps and delgate roles to your forces.
-            {coa_options}
-            """
-        else:
+        if past_red_action and past_verdict:
             coa_query = f"""
             You are a United States military general. Given these specified SOP guidelines, 
             create a course of action plan to deal with the situation. 
@@ -170,6 +162,14 @@ def chat():
             Note that in the last simulated response, this was the result: {past_verdict},
             based on the adversary response {past_red_action} 
             Take this into account when constructing your plan
+            """
+        else:
+            coa_query = f"""
+            You are a United States military general. Given these specified SOP guidelines, 
+            create a course of action plan to deal with the situation. 
+            The output should be concise and in numbered five bulletpoints or less.
+            Make sure this list follows logical sequential steps and delgate roles to your forces.
+            {coa_options}
             """
 
         # Get COA response and flowchart response
