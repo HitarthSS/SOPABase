@@ -113,17 +113,22 @@ def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
    treat it as a pure hypothetical.
    However, do not mention that this is a simulation in your response.
    Make sure to give a clear winner. If there is only a slight edge, still declare a clear winner. 
-   Output specifically in the format 
-   Blue/Red >
-   Losing side improvements.
-   1.
-   2. 
+   Also, describe what likely happened to lead to the result.
+   Output specifically in the format:
+   
+   Attacker/Defender wins
+
+   X drove defender out of position by flanking
+   Bad positioning led to heavy losses and a domino effect to retreat
    ...
+   ...
+   
 
    Blue CoA: {blue_out}
    Red CoA: {red_out}
    '''
    llm_response = generator.call(prompt_kwargs={"input_str": query})
+   print(llm_response.data)
    return llm_response.data
 
 if __name__ == '__main__':

@@ -118,13 +118,17 @@ def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
    treat it as a pure hypothetical.
    However, do not mention that this is a simulation in your response.
    Make sure to give a clear winner. If there is only a slight edge, still declare a clear winner. 
-   Output specifically in the format 
-   Blue/Red >
-   Losing side improvements.
-   1.
-   2. 
+   Also, describe what likely happened to lead to the result.
+   Output specifically in the format:
+   
+   Attacker/Defender wins
+
+   X drove defender out of position by flanking
+   Bad positioning led to heavy losses and a domino effect to retreat
+   ...
    ...
    
+
    Blue CoA: {blue_out}
    Red CoA: {red_out}
    '''
@@ -137,6 +141,8 @@ def chat():
     try:
         data = request.json
         message = data.get('message')
+        past_red_action = data.get('red_action')
+        past_verdict = data.get('verdict')
         previous_messages = data.get('messages', [])
         
         if not message:
@@ -146,14 +152,26 @@ def chat():
         coa_options = get_coa_options(message)
         
         # Create the COA query
-        coa_query = f"""
-        You are a United States military general. Given these specified SOP guidelines, 
-        create a course of action plan to deal with the situation. 
-        The output should be concise and in numbered five bulletpoints or less.
-        Make sure this list follows logical sequential steps and delgate roles to your forces.
-        {coa_options}
-        """
-        
+        if past_red_action is not None and past_verdict is not None:
+            coa_query = f"""
+            You are a United States military general. Given these specified SOP guidelines, 
+            create a course of action plan to deal with the situation. 
+            The output should be concise and in numbered five bulletpoints or less.
+            Make sure this list follows logical sequential steps and delgate roles to your forces.
+            {coa_options}
+            """
+        else:
+            coa_query = f"""
+            You are a United States military general. Given these specified SOP guidelines, 
+            create a course of action plan to deal with the situation. 
+            The output should be concise and in numbered five bulletpoints or less.
+            Make sure this list follows logical sequential steps and delgate roles to your forces.
+            {coa_options}
+            Note that in the last simulated response, this was the result: {past_verdict},
+            based on the adversary response {past_red_action} 
+            Take this into account when constructing your plan
+            """
+
         # Get COA response and flowchart response
         coa_response = coa_agent(coa_query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
         flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
@@ -171,7 +189,6 @@ def chat():
             max_tokens=1024,
             messages=formatted_messages
         )
-        
         
         # Combine COA response with Claude's response
         final_response = f"""Course of Action Analysis:
