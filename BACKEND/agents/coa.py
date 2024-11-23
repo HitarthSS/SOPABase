@@ -45,8 +45,9 @@ def coa_agent(query, model_client: ModelClient, model_kwargs):
    )
 
    llm_response = generator.call(prompt_kwargs={"input_str": query})
-   print(f"LLM response: {llm_response}")
+   print(f"LLM response: {llm_response.data}")
    print("")
+   return llm_response
 
 query = rf"""
 You are a United States military general. Given these specified SOP guidelines, 
@@ -55,4 +56,43 @@ The output should be concise and in numbered five bulletpoints or less.
 Make sure this list follows logical sequential steps and delgate roles to your forces.
 {coa_options}
 """
-coa_agent(query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+
+
+'''
+Need some mermaid dependencies for python
+'''
+import base64
+from IPython.display import Image, display
+import matplotlib.pyplot as plt
+
+def mm(graph):
+    graphbytes = graph.encode("utf8")
+    base64_bytes = base64.urlsafe_b64encode(graphbytes)
+    base64_string = base64_bytes.decode("ascii")
+    display(Image(url="https://mermaid.ink/img/" + base64_string))
+
+def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
+   generator = Generator(
+         model_client=model_client,
+         model_kwargs=model_kwargs,
+      )
+
+   query = rf'''
+            Based on the the provided course of action below, create Mermaid diagram code to model the situation and the actions taken.
+            Your response should be only in the format 
+            """
+            graph 
+            <input specifications ... >
+            """
+            Course of action: {coa_output}
+            '''
+   llm_response = generator.call(prompt_kwargs={"input_str": query})
+   print(f"flowchart response: {llm_response.data}")
+   print("")
+   return llm_response.data
+
+
+if __name__ == '__main__':
+   coa_response = coa_agent(query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+   flowchart_response = create_flowchart(coa_response.data, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+   mm(str(flowchart_response))
