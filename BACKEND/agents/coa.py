@@ -5,6 +5,8 @@ import supabase
 from supabase import create_client
 from adalflow.utils import setup_env
 from openai import OpenAI
+from adalflow.components.output_parsers.outputs import JsonOutputParser
+from dataclasses import dataclass, field
 
 setup_env(dotenv_path=r"C:\Users\edmun\Desktop\VSCode Projects\SOPABase\BACKEND\agents\.env") 
 url = "https://seqnpkevwxjyxahcqjah.supabase.co"
@@ -36,6 +38,7 @@ claude_model_kwargs = {
    "temperature": 0.0,
    "max_tokens": 5000
 }
+
 
 def coa_agent(query, model_client: ModelClient, model_kwargs):
   
@@ -136,6 +139,7 @@ def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
 
 if __name__ == '__main__':
    coa_response = coa_agent(query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+   print(coa_response.split(","))
    adversary_response = adversary_agent(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
    judge_response = judger(coa_response, coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
