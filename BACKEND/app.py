@@ -261,7 +261,7 @@ def judge():
         if not user_coa:
             return jsonify({'error': 'No user coa provided'}), 400
         if not adversary_coa:
-            return jsonify({'error': 'No adcversary coa provided'}), 400
+            return jsonify({'error': 'No adversary coa provided'}), 400
         
 
         # No memory to be fair
