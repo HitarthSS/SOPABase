@@ -7,6 +7,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Add a message counter for unique IDs
+let messageIdCounter = 0;
+const generateMessageId = () => {
+  messageIdCounter += 1;
+  return `${Date.now()}-${messageIdCounter}`;
+};
+
 type MessageType = {
   role: 'user' | 'coa' | 'adversary' | 'judge';
   content: string;
@@ -15,7 +22,6 @@ type MessageType = {
   isLoading?: boolean;
 };
 
-// Mock responses remain the same
 const mockResponses = {
   coa: (query: string) => ({
     content: "Based on your scenario, here are your options:",
@@ -157,12 +163,12 @@ export default function ChatInterface() {
     setMessages(prev => [...prev, {
       role: 'user',
       content: `Selected action: ${action}`,
-      id: Date.now().toString()
+      id: generateMessageId()
     }]);
   
     try {
       // Add loading message for adversary
-      const adversaryLoadingId = Date.now().toString();
+      const adversaryLoadingId = generateMessageId();
       setMessages(prev => [...prev, {
         role: 'adversary',
         content: '',
@@ -176,14 +182,14 @@ export default function ChatInterface() {
       // Replace loading message with actual response
       setMessages(prev => prev.map(msg => 
         msg.id === adversaryLoadingId 
-          ? { role: 'adversary', content: adversaryAction, id: msg.id }
+          ? { role: 'adversary', content: adversaryAction, id: adversaryLoadingId }
           : msg
       ));
       
       setLastEnemyAction(adversaryAction);
   
       // Add loading message for judge
-      const judgeLoadingId = Date.now().toString();
+      const judgeLoadingId = generateMessageId();
       setMessages(prev => [...prev, {
         role: 'judge',
         content: '',
@@ -197,7 +203,7 @@ export default function ChatInterface() {
       // Replace loading message with actual response
       setMessages(prev => prev.map(msg => 
         msg.id === judgeLoadingId 
-          ? { role: 'judge', content: verdict, id: msg.id }
+          ? { role: 'judge', content: verdict, id: judgeLoadingId }
           : msg
       ));
       
@@ -220,12 +226,12 @@ export default function ChatInterface() {
     setMessages(prev => [...prev, {
       role: 'user',
       content: query,
-      id: Date.now().toString()
+      id: generateMessageId()
     }]);
   
     try {
       // Add loading message for COA
-      const coaLoadingId = Date.now().toString();
+      const coaLoadingId = generateMessageId();
       setMessages(prev => [...prev, {
         role: 'coa',
         content: '',
@@ -242,7 +248,7 @@ export default function ChatInterface() {
               role: 'coa',
               content: coaResponse.response[0],
               actions: coaResponse.response,
-              id: msg.id
+              id: coaLoadingId
             }
           : msg
       ));
@@ -348,9 +354,9 @@ export default function ChatInterface() {
                                   onClick={() => handleActionSelect(action)}
                                   disabled={isLoading}
                                   variant="secondary"
-                                  className="w-full text-left justify-start hover:bg-gray-100"
+                                  className="w-full text-left justify-start hover:bg-gray-100 whitespace-normal h-auto"
                                 >
-                                  {action}
+                                  <span className="line-clamp-2">{action}</span>
                                 </Button>
                               ))}
                             </motion.div>
