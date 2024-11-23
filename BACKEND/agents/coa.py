@@ -52,9 +52,12 @@ def coa_agent(query, model_client: ModelClient, model_kwargs):
 query = rf"""
 You are a United States military general. Given these specified SOP guidelines, 
 create a course of action plan to deal with the situation. 
-The output should be concise and in numbered five bulletpoints or less.
+The output should be concise.
 Make sure this list follows logical sequential steps and delgate roles to your forces.
 {coa_options}
+The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+Example output:
+action 1, action 2, action 3
 """
 
 def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):

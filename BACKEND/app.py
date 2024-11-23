@@ -156,12 +156,15 @@ def chat():
             coa_query = f"""
             You are a United States military general. Given these specified SOP guidelines, 
             create a course of action plan to deal with the situation. 
-            The output should be concise and in numbered five bulletpoints or less.
+            The output should be concise.
             Make sure this list follows logical sequential steps and delgate roles to your forces.
             {coa_options}
             Note that in the last simulated response, this was the result: {past_verdict},
             based on the adversary response {past_red_action} 
             Take this into account when constructing your plan
+            The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            Example output:
+            action 1, action 2, action 3
             """
         else:
             coa_query = f"""
@@ -170,6 +173,9 @@ def chat():
             The output should be concise and in numbered five bulletpoints or less.
             Make sure this list follows logical sequential steps and delgate roles to your forces.
             {coa_options}
+            The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            Example output:
+            action 1, action 2, action 3
             """
 
         # Get COA response and flowchart response
