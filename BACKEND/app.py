@@ -120,6 +120,8 @@ def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
 
    Blue CoA: {blue_out}
    Red CoA: {red_out}
+
+    Please respond with just a winner and a brief justification (2 sentences at most.)
    '''
    llm_response = generator.call(prompt_kwargs={"input_str": query})
    return llm_response.data
@@ -150,11 +152,11 @@ def chat():
             Note that in the last simulated response, this was the result: {past_verdict},
             based on the adversary response {past_red_action} 
             Take this into account when constructing your plan
-            The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            The output MUST be in a ####-separated list format. Do not number the output, and keep everything on the same line 
             Keep your response to five actions or less, and make sure these actions represent the most impactful of the possible choices
             Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
             Example output:
-            action 1, action 2, action 3
+            action 1####action 2####action 3
             """
         else:
             coa_query = f"""
