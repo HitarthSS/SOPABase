@@ -143,7 +143,6 @@ def chat():
         message = data.get('message')
         past_red_action = data.get('red_action')
         past_verdict = data.get('verdict')
-        previous_messages = data.get('messages', [])
         
         if not message:
             return jsonify({'error': 'No message provided'}), 400
@@ -230,37 +229,12 @@ def adversary():
         data = request.json
         user_coa = data.get('user') # send over user course of action
         message = data.get('message')
-        previous_messages = data.get('messages', [])
-        
-        if not message:
-            return jsonify({'error': 'No message provided'}), 400
 
         # Get COA response and flowchart response
-        coa_response = adversary_agent(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)
-
-        # Format all messages for context
-        formatted_messages = [
-            {"role": msg["role"], "content": msg["content"]}
-            for msg in previous_messages
-        ]
-        formatted_messages.append({"role": "user", "content": message})
+        coa_response = adversary_agent(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)    
         
-        # Get final response from Claude
-        response = anthropic_client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1024,
-            messages=formatted_messages
-        )
-        
-        # Combine COA response with Claude's response
-        final_response = f"""Adversary course of Action Analysis:
-        {coa_response}
-        
-        Additional Context:
-        {response.content[0].text}"""
-
         return jsonify({
-            'response': final_response
+            'response': coa_response
         })
 
     except Exception as e:
