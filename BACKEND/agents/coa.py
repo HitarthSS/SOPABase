@@ -58,7 +58,8 @@ create a course of action plan to deal with the situation.
 The output should be concise.
 Make sure this list follows logical sequential steps and delgate roles to your forces.
 {coa_options}
-The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line. 
+Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
 Example output:
 action 1, action 2, action 3
 """

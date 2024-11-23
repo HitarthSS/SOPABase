@@ -162,6 +162,7 @@ def chat():
             based on the adversary response {past_red_action} 
             Take this into account when constructing your plan
             The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
             Example output:
             action 1, action 2, action 3
             """
@@ -176,39 +177,13 @@ def chat():
 
             The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
             Example output:
+            Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
             action 1, action 2, action 3
             """
 
         # Get COA response and flowchart response
         coa_response = coa_agent(coa_query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
         flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
-
-        '''
-        # Format all messages for context
-        formatted_messages = [
-            {"role": msg["role"], "content": msg["content"]}
-            for msg in previous_messages
-        ]
-        formatted_messages.append({"role": "user", "content": message})
-        
-        # Get final response from Claude
-        response = anthropic_client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1024,
-            messages=formatted_messages
-        )
-        
-        # Combine COA response with Claude's response
-        final_response = f"""Course of Action Analysis:
-        {coa_response}
-        
-        Additional Context:
-        {response.content[0].text}
-        The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
-        Example output:
-        action 1, action 2, action 3
-        """
-        '''
 
         # Into list
         list_response = coa_response.split("")
