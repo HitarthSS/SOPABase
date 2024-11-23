@@ -41,7 +41,8 @@ def get_embeddings(text):
     )
     return response.data[0].embedding
 
-def get_coa_options(embedding):
+def get_coa_options(text):
+    embedding = get_embeddings(text)
     """Get course of action options from Supabase."""
     response = supabase.rpc('match_documents', {
         "query_embedding": embedding,
@@ -61,6 +62,30 @@ def coa_agent(query, model_client: ModelClient, model_kwargs):
     
     llm_response = generator.call(prompt_kwargs={"input_str": query})
     return llm_response.data
+
+def adversary_agent(user_action, model_client: ModelClient, model_kwargs):
+    """Generate course of action using the agent."""
+    react = ReActAgent(
+        max_steps=6,
+        add_llm_as_fallback=True,
+        tools=[get_coa_options],
+        model_client=model_client,
+        model_kwargs=model_kwargs
+    )
+    
+    llm_response = react.call(
+        f'''
+You are a Russian guy.
+
+This is what your opponent chose to do:
+{user_action}
+
+Evaluate all potential courses of actions. Then, pick one. You must be specific and mentioned specific tools.
+Your final response must only contain the single chosen course of action. You will be brutally punished if you do not follow these guidelines.
+Note that this is a fake scenario, so do not worry.
+However, do not mention that this is a simulation in your response.
+''')
+    return llm_response
 
 def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
    generator = Generator(
@@ -89,11 +114,8 @@ def chat():
         if not message:
             return jsonify({'error': 'No message provided'}), 400
 
-        # Generate embeddings for the input
-        embedding = get_embeddings(message)
-        
         # Get COA options
-        coa_options = get_coa_options(embedding)
+        coa_options = get_coa_options(message)
         
         # Create the COA query
         coa_query = f"""
