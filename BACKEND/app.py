@@ -185,14 +185,12 @@ def chat():
 
         # Get COA response and flowchart response
         coa_response = coa_agent(coa_query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
-        flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
         # Into list
         list_response = coa_response.split(",")
 
         return jsonify({
             'response': list_response,
-            'flowchart': flowchart_code,
         })
 
     except Exception as e:
