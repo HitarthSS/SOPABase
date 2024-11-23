@@ -34,21 +34,6 @@ const mockResponses = {
   })
 };
 
-const messageVariants = {
-  initial: { opacity: 0, y: 20, scale: 0.95 },
-  animate: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: { duration: 0.2, ease: "easeOut" }
-  },
-  exit: { 
-    opacity: 0,
-    y: 10,
-    transition: { duration: 0.15, ease: "easeIn" }
-  }
-};
-
 export default function ChatInterface() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [input, setInput] = useState('');
@@ -66,67 +51,134 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
+
+  const callCOAAgent = async (query: string, lastVerdict: string | null, lastEnemyAction: string | null) => {
+    const response = await fetch('http://localhost:5000/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: query,
+        red_action: lastEnemyAction,
+        verdict: lastVerdict
+      })
+    });
+    return await response.json();
+  };
+  
+  const callAdversaryAgent = async (userAction: string, message: string) => {
+    const response = await fetch('http://localhost:5000/api/adversary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user: userAction,
+        message: message
+      })
+    });
+    return await response.json();
+  };
+  
+  const callJudgeAgent = async (userAction: string, adversaryAction: string) => {
+    const response = await fetch('http://localhost:5000/api/judge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user: userAction,
+        adversary: adversaryAction
+      })
+    });
+    return await response.json();
+  };
+  
+  const messageVariants = {
+    initial: { opacity: 0, y: 20, scale: 0.95 },
+    animate: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { duration: 0.2, ease: "easeOut" }
+    },
+    exit: { 
+      opacity: 0,
+      y: 10,
+      transition: { duration: 0.15, ease: "easeIn" }
+    }
+  };
+
   const handleActionSelect = async (action: string) => {
     if (isLoading) return;
     
     setIsLoading(true);
     setLastUserAction(action);
-
+  
     // Log the selected action
     setMessages(prev => [...prev, {
       role: 'user',
       content: `Selected action: ${action}`,
       id: Date.now().toString()
     }]);
-
-    // Get adversary response
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const adversaryResponse = mockResponses.adversary(action);
-    setMessages(prev => [...prev, {
-      role: 'adversary',
-      content: adversaryResponse.content,
-      id: Date.now().toString()
-    }]);
-    setLastEnemyAction(adversaryResponse.content);
-
-    // Get judge verdict
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const judgeResponse = mockResponses.judge(action, adversaryResponse.content);
-    setMessages(prev => [...prev, {
-      role: 'judge',
-      content: judgeResponse.content,
-      id: Date.now().toString()
-    }]);
-    setLastVerdict(judgeResponse.content);
-
+  
+    try {
+      // Get adversary response
+      const adversaryResponse = await callAdversaryAgent(action, input);
+      const adversaryAction = adversaryResponse.response;
+      setMessages(prev => [...prev, {
+        role: 'adversary',
+        content: adversaryAction,
+        id: Date.now().toString()
+      }]);
+      setLastEnemyAction(adversaryAction);
+  
+      // Get judge verdict
+      const judgeResponse = await callJudgeAgent(action, adversaryAction);
+      const verdict = judgeResponse.response;
+      setMessages(prev => [...prev, {
+        role: 'judge',
+        content: verdict,
+        id: Date.now().toString()
+      }]);
+      setLastVerdict(verdict);
+    } catch (error) {
+      console.error('Error:', error);
+      // Add error handling UI feedback here
+    }
+  
     setIsLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-
+  
     setIsLoading(true);
     const query = input;
     setInput('');
-
+  
     // Add user query to chat
     setMessages(prev => [...prev, {
       role: 'user',
       content: query,
       id: Date.now().toString()
     }]);
-
-    // Get COA response with options
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const coaResponse = mockResponses.coa(query);
-    setMessages(prev => [...prev, {
-      role: 'coa',
-      content: coaResponse.content,
-      actions: coaResponse.actions,
-      id: Date.now().toString()
-    }]);
-
+  
+    try {
+      // Get COA response with options
+      const coaResponse = await callCOAAgent(query, lastVerdict, lastEnemyAction);
+      setMessages(prev => [...prev, {
+        role: 'coa',
+        content: coaResponse.response[0], // Assuming response is array of actions
+        actions: coaResponse.response,
+        id: Date.now().toString()
+      }]);
+  
+      // If there's a flowchart, add it to the display area
+      if (coaResponse.flowchart) {
+        // Handle flowchart display
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      // Add error handling UI feedback here
+    }
+  
     setIsLoading(false);
   };
 
