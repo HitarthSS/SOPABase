@@ -37,7 +37,7 @@ claude_model_kwargs = {
    "max_tokens": 5000
 }
 
-def coa_agent(query, model_client: ModelClient, model_kwargs, coa_options):
+def coa_agent(query, model_client: ModelClient, model_kwargs):
   
    generator = Generator(
       model_client=model_client,
@@ -51,6 +51,8 @@ def coa_agent(query, model_client: ModelClient, model_kwargs, coa_options):
 query = rf"""
 You are a United States military general. Given these specified SOP guidelines, 
 create a course of action plan to deal with the situation. 
-The output should be concise and in five bulletpoints or less. {coa_options}
+The output should be concise and in numbered five bulletpoints or less.
+Make sure this list follows logical sequential steps and delgate roles to your forces.
+{coa_options}
 """
-coa_agent(query, ModelClientType.ANTHROPIC(), claude_model_kwargs, coa_options)
+coa_agent(query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
