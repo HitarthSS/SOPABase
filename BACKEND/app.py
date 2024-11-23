@@ -172,7 +172,9 @@ def chat():
             create a course of action plan to deal with the situation. 
             The output should be concise and in numbered five bulletpoints or less.
             Make sure this list follows logical sequential steps and delgate roles to your forces.
+            
             {coa_options}
+
             The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
             Example output:
             action 1, action 2, action 3
@@ -182,6 +184,7 @@ def chat():
         coa_response = coa_agent(coa_query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
         flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
+        '''
         # Format all messages for context
         formatted_messages = [
             {"role": msg["role"], "content": msg["content"]}
@@ -201,10 +204,18 @@ def chat():
         {coa_response}
         
         Additional Context:
-        {response.content[0].text}"""
+        {response.content[0].text}
+        The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+        Example output:
+        action 1, action 2, action 3
+        """
+        '''
+
+        # Into list
+        list_response = coa_response.split("")
 
         return jsonify({
-            'response': final_response,
+            'response': list_response,
             'flowchart': flowchart_code,
         })
 
