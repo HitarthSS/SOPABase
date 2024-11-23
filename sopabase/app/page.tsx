@@ -66,36 +66,68 @@ export default function ChatInterface() {
     setInput('');
     setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
-      });
+  //   try {
+  //     const response = await fetch('/api/chat', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ message: input }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to get response');
+  //     }
 
-      const data = await response.json();
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.response,
-        id: (Date.now() + 1).toString()
-      }]);
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'I apologize, but I encountered an error processing your request.',
-        id: (Date.now() + 1).toString()
-      }]);
-    } finally {
-      setIsLoading(false);
+  //     const data = await response.json();
+  //     setMessages(prev => [...prev, { 
+  //       role: 'assistant', 
+  //       content: data.response,
+  //       id: (Date.now() + 1).toString()
+  //     }]);
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     setMessages(prev => [...prev, { 
+  //       role: 'assistant', 
+  //       content: 'I apologize, but I encountered an error processing your request.',
+  //       id: (Date.now() + 1).toString()
+  //     }]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  
+  try {
+    // Update the fetch call to use Flask backend
+    const response = await fetch('http://localhost:5000/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: input }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get response');
     }
-  };
+
+    const data = await response.json();
+    setMessages(prev => [...prev, { 
+      role: 'assistant', 
+      content: data.response,
+      id: (Date.now() + 1).toString()
+    }]);
+  } catch (error) {
+    console.error('Error:', error);
+    setMessages(prev => [...prev, { 
+      role: 'assistant', 
+      content: 'I apologize, but I encountered an error processing your request.',
+      id: (Date.now() + 1).toString()
+    }]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const messageVariants = {
     initial: {
