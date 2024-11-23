@@ -59,9 +59,10 @@ The output should be concise.
 Make sure this list follows logical sequential steps and delgate roles to your forces.
 {coa_options}
 The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line. 
+Keep your response to five actions or less, and make sure these actions represent the most impactful of the possible choicces
 Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
 Example output:
-action 1, action 2, action 3
+action 1, action 2, action 3, action 4, action 5
 """
 
 def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
