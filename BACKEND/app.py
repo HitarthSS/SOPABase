@@ -17,8 +17,9 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+
 # Initialize clients
-client = OpenAI(api_key="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")
+client = OpenAI(api_key=os.getenv("OPEN_AI_KEY"))
 anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Initialize Supabase
