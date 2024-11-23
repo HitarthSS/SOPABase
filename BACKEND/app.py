@@ -199,12 +199,82 @@ def chat():
 
         return jsonify({
             'response': final_response,
-            'flowchart': flowchart_code
+            'flowchart': flowchart_code,
         })
 
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/api/adversary', methods=['POST'])
+def adversary():
+    try:
+        data = request.json
+        user_coa = data.get('user') # send over user course of action
+        message = data.get('message')
+        previous_messages = data.get('messages', [])
+        
+        if not message:
+            return jsonify({'error': 'No message provided'}), 400
+
+        # Get COA response and flowchart response
+        coa_response = adversary_agent(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+
+        # Format all messages for context
+        formatted_messages = [
+            {"role": msg["role"], "content": msg["content"]}
+            for msg in previous_messages
+        ]
+        formatted_messages.append({"role": "user", "content": message})
+        
+        # Get final response from Claude
+        response = anthropic_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1024,
+            messages=formatted_messages
+        )
+        
+        # Combine COA response with Claude's response
+        final_response = f"""Adversary course of Action Analysis:
+        {coa_response}
+        
+        Additional Context:
+        {response.content[0].text}"""
+
+        return jsonify({
+            'response': final_response
+        })
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/judge', methods=['POST'])
+def judge():
+    try:
+        data = request.json
+        user_coa = data.get('user') # send over user course of action
+        adversary_coa = data.get('adversary') 
+
+        if not user_coa:
+            return jsonify({'error': 'No user coa provided'}), 400
+        if not adversary_coa:
+            return jsonify({'error': 'No adcversary coa provided'}), 400
+        
+
+        # No memory to be fair
+        judge_response = adversary_agent(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+
+        return jsonify({
+            'response': judge_response
+        })
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
