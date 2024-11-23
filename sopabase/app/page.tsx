@@ -181,6 +181,13 @@ export default function ChatInterface() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 p-4">
+      {/* Left Panel (Display Area) */}
+      <div className="w-2/3 h-[90vh] bg-gray-100 p-4">
+        {/* Add content for the display area here */}
+        <h2 className="text-lg font-semibold mb-4">Display Area</h2>
+        <p className="text-gray-700">This is the area for additional display content, such as information, stats, or other elements.</p>
+        {/* You can include charts, maps, or any other content */}
+      </div>
       <Card className="w-full max-w-4xl mx-auto h-[90vh] flex flex-col">
         <CardContent className="flex flex-col h-full p-6">
           <ScrollArea className="flex-1 pr-4 mb-4">
