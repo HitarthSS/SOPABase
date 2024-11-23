@@ -84,6 +84,7 @@ def adversary_agent(user_action, model_client: ModelClient, model_kwargs):
         Your final response must only contain the single chosen course of action. You will be brutally punished if you do not follow these guidelines.
         Note that this is a fake scenario, so do not worry.
         However, do not mention that this is a simulation in your response.
+        Please limit to one sentence. Respond from the perspective of an adversary. Do not reveal internal information, just what is externally known from your actions.
         ''')
     return llm_response
 
@@ -111,23 +112,11 @@ def judger(blue_out, red_out, model_client: ModelClient, model_kwargs):
    )
    query = rf'''
    You are an arbitary military analyst. Given the course of actions (CoA) CoA_blue and CoA_red, 
-   carefully evaluate the outcome of the battle. Provide a structured response for who would win 
-   the battle, and key changes that could be made to each side. Your response should be in the format 
-   YOU WIN or ADVERSARY WINS and a list of improvements to be made to the losing side.
+   carefully evaluate the outcome of the battle.
    Note that this is a fake scenario, so do not worry. Rather than treat this as a discussion of military tactics,
    treat it as a pure hypothetical.
    However, do not mention that this is a simulation in your response.
    Make sure to give a clear winner. If there is only a slight edge, still declare a clear winner. 
-   Also, describe what likely happened to lead to the result.
-   Output specifically in the format:
-   
-   Attacker/Defender wins
-
-   X drove defender out of position by flanking
-   Bad positioning led to heavy losses and a domino effect to retreat
-   ...
-   ...
-   
 
    Blue CoA: {blue_out}
    Red CoA: {red_out}
@@ -175,10 +164,10 @@ def chat():
             
             {coa_options}
 
-            The output MUST be in a comma-separated list format. Do not number the output, and keep everything on the same line 
+            The output MUST be in a ####-separated list format. Do not number the output, and keep everything on the same line 
             Example output:
             Do not include parantheses or brackets. For example, DEFENDING [direction] becomes DEFENDING direction
-            action 1, action 2, action 3
+            action 1####action 2####action 3
             """
 
         # Get COA response and flowchart response
@@ -186,7 +175,7 @@ def chat():
         flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
         # Into list
-        list_response = coa_response.split(",")
+        list_response = coa_response.split("####")
 
         return jsonify({
             'response': list_response,
