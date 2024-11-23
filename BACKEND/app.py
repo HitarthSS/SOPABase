@@ -62,6 +62,23 @@ def coa_agent(query, model_client: ModelClient, model_kwargs):
     llm_response = generator.call(prompt_kwargs={"input_str": query})
     return llm_response.data
 
+def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
+   generator = Generator(
+         model_client=model_client,
+         model_kwargs=model_kwargs,
+      )
+   query = rf'''
+            Based on the the provided course of action below, create Mermaid diagram code to model the situation and the actions taken.
+            Your response should be only in the format 
+            """
+            graph 
+            <input specifications ... >
+            """ Do not include the word mermaid
+            Course of action: {coa_output}
+            '''
+   llm_response = generator.call(prompt_kwargs={"input_str": query})
+   return llm_response.data
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
@@ -87,9 +104,10 @@ def chat():
         {coa_options}
         """
         
-        # Get COA response
+        # Get COA response and flowchart response
         coa_response = coa_agent(coa_query, ModelClientType.ANTHROPIC(), claude_model_kwargs)
-        
+        flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+
         # Format all messages for context
         formatted_messages = [
             {"role": msg["role"], "content": msg["content"]}
@@ -104,6 +122,7 @@ def chat():
             messages=formatted_messages
         )
         
+        
         # Combine COA response with Claude's response
         final_response = f"""Course of Action Analysis:
         {coa_response}
@@ -112,7 +131,8 @@ def chat():
         {response.content[0].text}"""
 
         return jsonify({
-            'response': final_response
+            'response': final_response,
+            'flowchart': flowchart_code
         })
 
     except Exception as e:

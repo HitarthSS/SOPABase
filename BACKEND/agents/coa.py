@@ -68,7 +68,7 @@ def create_flowchart(coa_output, model_client: ModelClient, model_kwargs):
             """
             graph 
             <input specifications ... >
-            """
+            """ Do not include the word mermaid
             Course of action: {coa_output}
             '''
    llm_response = generator.call(prompt_kwargs={"input_str": query})
