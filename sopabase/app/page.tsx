@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Send, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
@@ -53,81 +53,72 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('chatMessages');
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  const handleClearChat = () => {
+    setMessages([]);
+    localStorage.removeItem('chatMessages');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage: Message = { 
-      role: 'user', 
+    const userMessage = { 
+      role: 'user' as const,
       content: input,
-      id: Date.now().toString() 
+      id: Date.now().toString()
     };
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
-  //   try {
-  //     const response = await fetch('/api/chat', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ message: input }),
-  //     });
+    try {
+      const response = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          messages: messages.map(({ role, content }) => ({ role, content })),
+        }),
+      });
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to get response');
-  //     }
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
 
-  //     const data = await response.json();
-  //     setMessages(prev => [...prev, { 
-  //       role: 'assistant', 
-  //       content: data.response,
-  //       id: (Date.now() + 1).toString()
-  //     }]);
-  //   } catch (error) {
-  //     console.error('Error:', error);
-  //     setMessages(prev => [...prev, { 
-  //       role: 'assistant', 
-  //       content: 'I apologize, but I encountered an error processing your request.',
-  //       id: (Date.now() + 1).toString()
-  //     }]);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-  
-  try {
-    // Update the fetch call to use Flask backend
-    const response = await fetch('http://localhost:5000/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message: input }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get response');
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, { 
+        role: 'assistant',
+        content: data.response,
+        id: (Date.now() + 1).toString()
+      }]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, { 
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error processing your request.',
+        id: (Date.now() + 1).toString()
+      }]);
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await response.json();
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: data.response,
-      id: (Date.now() + 1).toString()
-    }]);
-  } catch (error) {
-    console.error('Error:', error);
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: 'I apologize, but I encountered an error processing your request.',
-      id: (Date.now() + 1).toString()
-    }]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const messageVariants = {
     initial: {
@@ -158,6 +149,17 @@ export default function ChatInterface() {
     <div className="flex min-h-screen bg-gray-50 p-4">
       <Card className="w-full max-w-4xl mx-auto h-[90vh] flex flex-col">
         <CardContent className="flex flex-col h-full p-6">
+          <div className="flex justify-end mb-4">
+            <Button
+              onClick={handleClearChat}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <ScrollArea className="flex-1 pr-4 mb-4">
             <div className="space-y-4">
               <AnimatePresence initial={false}>
@@ -186,6 +188,7 @@ export default function ChatInterface() {
                   </motion.div>
                 ))}
               </AnimatePresence>
+              
               <AnimatePresence>
                 {isLoading && (
                   <div className="flex justify-start">
