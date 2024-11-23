@@ -265,7 +265,7 @@ def judge():
         
 
         # No memory to be fair
-        judge_response = adversary_agent(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)
+        judge_response = judger(user_coa, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
         return jsonify({
             'response': judge_response
