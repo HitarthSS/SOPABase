@@ -186,7 +186,7 @@ def chat():
         flowchart_code = create_flowchart(coa_response, ModelClientType.ANTHROPIC(), claude_model_kwargs)
 
         # Into list
-        list_response = coa_response.split("")
+        list_response = coa_response.split(",")
 
         return jsonify({
             'response': list_response,
