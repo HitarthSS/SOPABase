@@ -1,11 +1,10 @@
-// app/page.tsx
-'use client';
+"use client"
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type MessageType = {
@@ -13,9 +12,10 @@ type MessageType = {
   content: string;
   id: string;
   actions?: string[];
+  isLoading?: boolean;
 };
 
-// Mock responses (same as before)
+// Mock responses remain the same
 const mockResponses = {
   coa: (query: string) => ({
     content: "Based on your scenario, here are your options:",
@@ -34,10 +34,40 @@ const mockResponses = {
   })
 };
 
+const LoadingDots = () => (
+  <motion.div 
+    className="flex space-x-1 items-center h-6"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    {[0, 1, 2].map((index) => (
+      <motion.div
+        key={index}
+        className="w-2 h-2 bg-current rounded-full"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.4, 1, 0.4]
+        }}
+        transition={{
+          duration: 0.6,
+          repeat: Infinity,
+          delay: index * 0.2
+        }}
+      />
+    ))}
+  </motion.div>
+);
+
 export default function ChatInterface() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({
+    coa: false,
+    adversary: false,
+    judge: false
+  });
   const [lastUserAction, setLastUserAction] = useState<string | null>(null);
   const [lastEnemyAction, setLastEnemyAction] = useState<string | null>(null);
   const [lastVerdict, setLastVerdict] = useState<string | null>(null);
@@ -51,44 +81,58 @@ export default function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
-
   const callCOAAgent = async (query: string, lastVerdict: string | null, lastEnemyAction: string | null) => {
-    const response = await fetch('http://127.0.0.1:5000/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: query,
-        red_action: lastEnemyAction,
-        verdict: lastVerdict
-      })
-    });
-    return await response.json();
+    setLoadingStates(prev => ({ ...prev, coa: true }));
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: query,
+          red_action: lastEnemyAction,
+          verdict: lastVerdict
+        })
+      });
+      return await response.json();
+    } finally {
+      setLoadingStates(prev => ({ ...prev, coa: false }));
+    }
   };
   
   const callAdversaryAgent = async (userAction: string, message: string) => {
-    const response = await fetch('http://127.0.0.1:5000/api/adversary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user: userAction,
-        message: message
-      })
-    });
-    return await response.json();
+    setLoadingStates(prev => ({ ...prev, adversary: true }));
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/adversary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: userAction,
+          message: message
+        })
+      });
+      return await response.json();
+    } finally {
+      setLoadingStates(prev => ({ ...prev, adversary: false }));
+    }
   };
   
   const callJudgeAgent = async (userAction: string, adversaryAction: string) => {
-    const response = await fetch('http://127.0.0.1:5000/api/judge', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user: userAction,
-        adversary: adversaryAction
-      })
-    });
-    return await response.json();
+    setLoadingStates(prev => ({ ...prev, judge: true }));
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: userAction,
+          adversary: adversaryAction
+        })
+      });
+      return await response.json();
+    } finally {
+      setLoadingStates(prev => ({ ...prev, judge: false }));
+    }
   };
-  
+
   const messageVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { 
@@ -110,7 +154,6 @@ export default function ChatInterface() {
     setIsLoading(true);
     setLastUserAction(action);
   
-    // Log the selected action
     setMessages(prev => [...prev, {
       role: 'user',
       content: `Selected action: ${action}`,
@@ -118,28 +161,49 @@ export default function ChatInterface() {
     }]);
   
     try {
-      // Get adversary response
-      const adversaryResponse = await callAdversaryAgent(action, input);
-      const adversaryAction = adversaryResponse.response;
+      // Add loading message for adversary
+      const adversaryLoadingId = Date.now().toString();
       setMessages(prev => [...prev, {
         role: 'adversary',
-        content: adversaryAction,
-        id: Date.now().toString()
+        content: '',
+        id: adversaryLoadingId,
+        isLoading: true
       }]);
+
+      const adversaryResponse = await callAdversaryAgent(action, input);
+      const adversaryAction = adversaryResponse.response;
+      
+      // Replace loading message with actual response
+      setMessages(prev => prev.map(msg => 
+        msg.id === adversaryLoadingId 
+          ? { role: 'adversary', content: adversaryAction, id: msg.id }
+          : msg
+      ));
+      
       setLastEnemyAction(adversaryAction);
   
-      // Get judge verdict
-      const judgeResponse = await callJudgeAgent(action, adversaryAction);
-      const verdict = judgeResponse.response;
+      // Add loading message for judge
+      const judgeLoadingId = Date.now().toString();
       setMessages(prev => [...prev, {
         role: 'judge',
-        content: verdict,
-        id: Date.now().toString()
+        content: '',
+        id: judgeLoadingId,
+        isLoading: true
       }]);
+
+      const judgeResponse = await callJudgeAgent(action, adversaryAction);
+      const verdict = judgeResponse.response;
+      
+      // Replace loading message with actual response
+      setMessages(prev => prev.map(msg => 
+        msg.id === judgeLoadingId 
+          ? { role: 'judge', content: verdict, id: msg.id }
+          : msg
+      ));
+      
       setLastVerdict(verdict);
     } catch (error) {
       console.error('Error:', error);
-      // Add error handling UI feedback here
     }
   
     setIsLoading(false);
@@ -153,7 +217,6 @@ export default function ChatInterface() {
     const query = input;
     setInput('');
   
-    // Add user query to chat
     setMessages(prev => [...prev, {
       role: 'user',
       content: query,
@@ -161,22 +224,30 @@ export default function ChatInterface() {
     }]);
   
     try {
-      // Get COA response with options
-      const coaResponse = await callCOAAgent(query, lastVerdict, lastEnemyAction);
+      // Add loading message for COA
+      const coaLoadingId = Date.now().toString();
       setMessages(prev => [...prev, {
         role: 'coa',
-        content: coaResponse.response[0], // Assuming response is array of actions
-        actions: coaResponse.response,
-        id: Date.now().toString()
+        content: '',
+        id: coaLoadingId,
+        isLoading: true
       }]);
-  
-      // If there's a flowchart, add it to the display area
-      if (coaResponse.flowchart) {
-        // Handle flowchart display
-      }
+
+      const coaResponse = await callCOAAgent(query, lastVerdict, lastEnemyAction);
+      
+      // Replace loading message with actual response
+      setMessages(prev => prev.map(msg => 
+        msg.id === coaLoadingId 
+          ? {
+              role: 'coa',
+              content: coaResponse.response[0],
+              actions: coaResponse.response,
+              id: msg.id
+            }
+          : msg
+      ));
     } catch (error) {
       console.error('Error:', error);
-      // Add error handling UI feedback here
     }
   
     setIsLoading(false);
@@ -195,7 +266,6 @@ export default function ChatInterface() {
     }
   };
 
-  
   const getMessageInfo = (role: string) => {
     switch (role) {
       case 'user':
@@ -233,12 +303,9 @@ export default function ChatInterface() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 p-4">
-      {/* Left Panel (Display Area) */}
       <div className="w-2/3 h-[90vh] bg-gray-100 p-4">
-        {/* Add content for the display area here */}
         <h2 className="text-lg font-semibold mb-4">Display Area</h2>
         <p className="text-gray-700">This is the area for additional display content, such as information, stats, or other elements.</p>
-        {/* You can include charts, maps, or any other content */}
       </div>
       <Card className="w-full max-w-4xl mx-auto h-[90vh] flex flex-col">
         <CardContent className="flex flex-col h-full p-6">
@@ -263,26 +330,32 @@ export default function ChatInterface() {
                       {getMessageInfo(message.role).title}
                     </motion.span>
                     <div className={`rounded-lg p-4 w-fit max-w-[80%] ${getMessageInfo(message.role).style}`}>
-                      {message.content}
-                      {message.actions && (
-                        <motion.div 
-                          className="mt-4 space-y-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          {message.actions.map((action, index) => (
-                            <Button
-                              key={index}
-                              onClick={() => handleActionSelect(action)}
-                              disabled={isLoading}
-                              variant="secondary"
-                              className="w-full text-left justify-start hover:bg-gray-100"
+                      {message.isLoading ? (
+                        <LoadingDots />
+                      ) : (
+                        <>
+                          {message.content}
+                          {message.actions && (
+                            <motion.div 
+                              className="mt-4 space-y-2"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.2 }}
                             >
-                              {action}
-                            </Button>
-                          ))}
-                        </motion.div>
+                              {message.actions.map((action, index) => (
+                                <Button
+                                  key={index}
+                                  onClick={() => handleActionSelect(action)}
+                                  disabled={isLoading}
+                                  variant="secondary"
+                                  className="w-full text-left justify-start hover:bg-gray-100"
+                                >
+                                  {action}
+                                </Button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </>
                       )}
                     </div>
                   </motion.div>
@@ -309,7 +382,11 @@ export default function ChatInterface() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
               >
-                <Send className="w-4 h-4" />
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </motion.button>
             </Button>
           </form>
